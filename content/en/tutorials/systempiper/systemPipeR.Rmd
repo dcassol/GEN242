@@ -6,7 +6,6 @@ output:
   BiocStyle::html_document:
     toc_float: true
     code_folding: show
-  BiocStyle::pdf_document: default
 package: systemPipeR
 vignette: |
   %\VignetteEncoding{UTF-8}
@@ -31,7 +30,7 @@ word-wrap: initial !important;
 
 <!--
 - Compile from command-line
-Rscript -e "rmarkdown::render('systemPipeR.Rmd', c('BiocStyle::html_document'), clean=F); knitr::knit('systemPipeR.Rmd', tangle=TRUE)"; Rscript ../md2jekyll.R systemPipeR.knit.md 2; Rscript -e "rmarkdown::render('systemPipeR.Rmd', c('BiocStyle::pdf_document'))"
+Rscript -e "rmarkdown::render('systemPipeR.Rmd', c('BiocStyle::html_document'), clean=F); knitr::knit('systemPipeR.Rmd', tangle=TRUE)"
 -->
 
 ```{r style, echo = FALSE, results = 'asis'}
@@ -60,8 +59,7 @@ suppressPackageStartupMessages({
 ```
 
 <div style="text-align: right"> 
-Source code downloads: &nbsp; &nbsp;
-[ [.Rmd](https://raw.githubusercontent.com/tgirke/GEN242//main/content/en/tutorials/systempiper/systemPipeR.Rmd) ] &nbsp; &nbsp; 
+Source code download: &nbsp; &nbsp;
 [ [.R](https://raw.githubusercontent.com/tgirke/GEN242//main/content/en/tutorials/systempiper/systemPipeR.R) ]
 </div>
 
@@ -376,7 +374,7 @@ functions render the proper command-line strings for each sample and software to
 ```{r SYSargs2_structure, eval=TRUE}
 library(systemPipeR)
 targets <- system.file("extdata", "targets.txt", package="systemPipeR")
-dir_path <- system.file("extdata/cwl/hisat2/hisat2-se", package="systemPipeR")
+dir_path <- system.file("extdata/cwl/hisat2", package="systemPipeR")
 WF <- loadWF(targets=targets, wf_file="hisat2-mapping-se.cwl",
                    input_file="hisat2-mapping-se.yml",
                    dir_path=dir_path)
@@ -413,7 +411,6 @@ modules(WF)
 targets(WF)[1]
 targets.as.df(targets(WF))[1:4,1:4]
 output(WF)[1]
-cwlfiles(WF)
 inputvars(WF)
 ```
 
@@ -432,24 +429,22 @@ space restrictions, the CWL-centric approach is not covered by this tutorial.
 Current, *systemPipeR* provides the _`param`_ file templates for third-party software tools. 
 A list is provided in the following table.
 
-```{r table_tools, echo=FALSE, message=FALSE}
+```{r table_tools, echo=FALSE, message=T}
 library(magrittr)
-# library(kableExtra)
 SPR_software <- system.file("extdata", "SPR_software.csv", package="systemPipeR")
-#SPR_software <- "SPR_software.csv"
 software <- read.delim(SPR_software, sep=",", comment.char = "#")
 colors <- colorRampPalette((c("darkseagreen", "indianred1")))(length(unique(software$Category)))
 id <- as.numeric(c((unique(software$Category))))
 software %>%
   dplyr::mutate(Step = kableExtra::cell_spec(Step, color = "white", bold = TRUE,
-    background = factor(Category, id, colors)
-  )) %>%
+    background = factor(Category, id, colors))) %>%
    dplyr::select(Tool, Description, Step) %>%
-  dplyr::arrange(Tool) %>% 
+  dplyr::arrange(Tool) %>%
   kableExtra::kable(escape = FALSE, align = "c", col.names = c("Tool Name",	"Description", "Step")) %>%
   kableExtra::kable_styling(c("striped", "hover", "condensed"), full_width = TRUE) %>%
   kableExtra::scroll_box(width = "100%", height = "500px")
 ```
+
 
 Remember, if you desire to run any of these tools, make sure to have the respective software installed on your system and configure in the PATH. You can check as follows: 
 
@@ -598,22 +593,47 @@ genWorkenvir(workflow="rnaseq")
 setwd("rnaseq")
 ```
 
-#### Run workflow
+#### Create the workflow 
 
-Next, run the chosen sample workflow _`systemPipeRNAseq`_ ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/rnaseq/systemPipeRNAseq.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/rnaseq/systemPipeRNAseq.Rmd)) by executing from the command-line _`make -B`_ within the _`rnaseq`_ directory. Alternatively, one can run the code from the provided _`*.Rmd`_ template file from within R interactively. 
+This template provides some common steps for a `RNAseq` workflow. One can add, remove, modify 
+workflow steps by operating on the `sal` object. 
 
-The workflow includes following steps:
+```{r project_rnaseq, eval=FALSE}
+sal <- SPRproject() 
+sal <- importWF(sal, file_path = "systemPipeRNAseq.Rmd", verbose = FALSE)
+```
+
+**Workflow includes following steps:**
 
 1. Read preprocessing
     + Quality filtering (trimming)
     + FASTQ quality report
-2. Alignments: _`Tophat2`_ (or any other RNA-Seq aligner)
+2. Alignments: _`HISAT2`_ (or any other RNA-Seq aligner)
 3. Alignment stats 
 4. Read counting 
 5. Sample-wise correlation analysis
 6. Analysis of differentially expressed genes (DEGs)
 7. GO term enrichment analysis
 8. Gene-wise clustering
+
+#### Run workflow
+
+```{r run_rnaseq, eval=FALSE}
+sal <- runWF(sal)
+```
+
+Workflow visualization 
+
+```{r plot_rnaseq, eval=FALSE}
+plotWF(sal)
+```
+
+Report generation
+
+```{r report_rnaseq, eval=FALSE}
+sal <- renderReport(sal)
+sal <- renderLogs(sal)
+```
 
 ### ChIP-Seq sample
 
@@ -625,11 +645,7 @@ genWorkenvir(workflow="chipseq")
 setwd("chipseq")
 ```
 
-#### Run workflow
-
-Next, run the chosen sample workflow _`systemPipeChIPseq_single`_ ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/chipseq/systemPipeChIPseq.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/chipseq/systemPipeChIPseq.Rmd)) by executing from the command-line _`make -B`_ within the _`chipseq`_ directory. Alternatively, one can run the code from the provided _`*.Rmd`_ template file from within R interactively. 
-
-The workflow includes the following steps:
+**Workflow includes following steps:**
 
 1. Read preprocessing
     + Quality filtering (trimming)
@@ -642,9 +658,36 @@ The workflow includes the following steps:
 7. GO term enrichment analysis
 8. Motif analysis
 
-### VAR-Seq sample 
+#### Create the workflow 
 
-#### VAR-Seq workflow for the single machine
+This template provides some common steps for a `ChIPseq` workflow. One can add, remove, modify 
+workflow steps by operating on the `sal` object. 
+
+```{r project_chipseq, eval=FALSE}
+sal <- SPRproject() 
+sal <- importWF(sal, file_path = "systemPipeChIPseq.Rmd", verbose = FALSE)
+```
+
+#### Run workflow
+
+```{r run_chipseq, eval=FALSE}
+sal <- runWF(sal)
+```
+
+Workflow visualization 
+
+```{r plot_chipseq, eval=FALSE}
+plotWF(sal)
+```
+
+Report generation
+
+```{r report_chipseq, eval=FALSE}
+sal <- renderReport(sal)
+sal <- renderLogs(sal)
+```
+
+### VAR-Seq sample 
 
 Load the VAR-Seq sample workflow into your current working directory.
 
@@ -654,11 +697,7 @@ genWorkenvir(workflow="varseq")
 setwd("varseq")
 ```
 
-#### Run workflow
-
-Next, run the chosen sample workflow _`systemPipeVARseq_single`_ ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/varseq/systemPipeVARseq_single.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/varseq/systemPipeVARseq_single.Rmd)) by executing from the command-line _`make -B`_ within the _`varseq`_ directory. Alternatively, one can run the code from the provided _`*.Rmd`_ template file from within R interactively. 
-
-The workflow includes following steps:
+**Workflow includes following steps:**
 
 1. Read preprocessing
     + Quality filtering (trimming)
@@ -670,10 +709,34 @@ The workflow includes following steps:
 6. Combine results from many samples
 7. Summary statistics of samples
 
-#### VAR-Seq workflow for computer cluster
+#### Create the workflow 
 
-The workflow template provided for this step is called _`systemPipeVARseq.Rmd`_ ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/varseq/systemPipeVARseq.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/varseq/systemPipeVARseq.Rmd)).
-It runs the above VAR-Seq workflow in parallel on multiple compute nodes of an HPC system using Slurm as the scheduler. 
+This template provides some common steps for a `VARseq` workflow. One can add, remove, modify 
+workflow steps by operating on the `sal` object. 
+
+```{r project_varseq, eval=FALSE}
+sal <- SPRproject() 
+sal <- importWF(sal, file_path = "systemPipeVARseq.Rmd", verbose = FALSE)
+```
+
+#### Run workflow
+
+```{r run_varseq, eval=FALSE}
+sal <- runWF(sal)
+```
+
+Workflow visualization 
+
+```{r plot_varseq, eval=FALSE}
+plotWF(sal)
+```
+
+Report generation
+
+```{r report_varseq, eval=FALSE}
+sal <- renderReport(sal)
+sal <- renderLogs(sal)
+```
 
 ### Ribo-Seq sample
 
@@ -685,26 +748,51 @@ genWorkenvir(workflow="riboseq")
 setwd("riboseq")
 ```
 
-#### Run workflow
-
-Next, run the chosen sample workflow _`systemPipeRIBOseq`_ ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/riboseq/systemPipeRIBOseq.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/ribseq/systemPipeRIBOseq.Rmd)) by executing from the command-line _`make -B`_ within the _`ribseq`_ directory. Alternatively, one can run the code from the provided _`*.Rmd`_ template file from within R interactively. 
-
-The workflow includes following steps:
+**Workflow includes following steps:**
 
 1. Read preprocessing
     + Adaptor trimming and quality filtering
     + FASTQ quality report
-2. Alignments: _`Tophat2`_ (or any other RNA-Seq aligner)
+2. Alignments: _`HISAT2`_ (or any other RNA-Seq aligner)
 3. Alignment stats
 4. Compute read distribution across genomic features
-5. Adding custom features to the workflow (e.g. uORFs)
-6. Genomic read coverage along with transcripts
+5. Adding custom features to workflow (e.g. uORFs)
+6. Genomic read coverage along transcripts
 7. Read counting 
 8. Sample-wise correlation analysis
 9. Analysis of differentially expressed genes (DEGs)
 10. GO term enrichment analysis
 11. Gene-wise clustering
 12. Differential ribosome binding (translational efficiency)
+
+#### Create the workflow 
+
+This template provides some common steps for a `RIBOseq` workflow. One can add, remove, modify 
+workflow steps by operating on the `sal` object. 
+
+```{r project_riboseq, eval=FALSE}
+sal <- SPRproject() 
+sal <- importWF(sal, file_path = "systemPipeRIBOseq.Rmd", verbose = FALSE)
+```
+
+#### Run workflow
+
+```{r run_riboseq, eval=FALSE}
+sal <- runWF(sal)
+```
+
+Workflow visualization 
+
+```{r plot_riboseq, eval=FALSE}
+plotWF(sal, rstudio = TRUE)
+```
+
+Report generation
+
+```{r report_riboseq, eval=FALSE}
+sal <- renderReport(sal)
+sal <- renderLogs(sal)
+```
 
 ## Version information
 
