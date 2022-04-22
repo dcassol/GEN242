@@ -1,12 +1,11 @@
 ---
 title: "systemPipeR: Workflow design and reporting generation environment" 
 author: "Author: Daniela Cassol, Le Zhang and Thomas Girke"
-date: "Last update: 21 May, 2021" 
+date: "Last update: 21 April, 2022" 
 output:
   BiocStyle::html_document:
     toc_float: true
     code_folding: show
-  BiocStyle::pdf_document: default
 package: systemPipeR
 vignette: |
   %\VignetteEncoding{UTF-8}
@@ -20,6 +19,32 @@ weight: 7
 type: docs
 ---
 
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<link href="/rmarkdown-libs/datatables-css/datatables-crosstalk.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/datatables-binding/datatables.js"></script>
+<script src="/rmarkdown-libs/jquery/jquery-3.6.0.min.js"></script>
+<link href="/rmarkdown-libs/dt-core/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="/rmarkdown-libs/dt-core/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/dt-core/js/jquery.dataTables.min.js"></script>
+<link href="/rmarkdown-libs/dt-ext-fixedcolumns/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/dt-ext-fixedcolumns/js/dataTables.fixedColumns.min.js"></script>
+<link href="/rmarkdown-libs/dt-ext-scroller/css/scroller.dataTables.min.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/dt-ext-scroller/js/dataTables.scroller.min.js"></script>
+<link href="/rmarkdown-libs/crosstalk/css/crosstalk.min.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/crosstalk/js/crosstalk.min.js"></script>
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<link href="/rmarkdown-libs/datatables-css/datatables-crosstalk.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/datatables-binding/datatables.js"></script>
+<script src="/rmarkdown-libs/jquery/jquery-3.6.0.min.js"></script>
+<link href="/rmarkdown-libs/dt-core/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="/rmarkdown-libs/dt-core/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/dt-core/js/jquery.dataTables.min.js"></script>
+<link href="/rmarkdown-libs/dt-ext-fixedcolumns/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/dt-ext-fixedcolumns/js/dataTables.fixedColumns.min.js"></script>
+<link href="/rmarkdown-libs/dt-ext-scroller/css/scroller.dataTables.min.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/dt-ext-scroller/js/dataTables.scroller.min.js"></script>
+<link href="/rmarkdown-libs/crosstalk/css/crosstalk.min.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/crosstalk/js/crosstalk.min.js"></script>
 <script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
 
 <link href="/rmarkdown-libs/lightable/lightable.css" rel="stylesheet" />
@@ -34,7 +59,7 @@ word-wrap: initial !important;
 </style>
 <!--
 - Compile from command-line
-Rscript -e "rmarkdown::render('systemPipeR.Rmd', c('BiocStyle::html_document'), clean=F); knitr::knit('systemPipeR.Rmd', tangle=TRUE)"; Rscript ../md2jekyll.R systemPipeR.knit.md 2; Rscript -e "rmarkdown::render('systemPipeR.Rmd', c('BiocStyle::pdf_document'))"
+Rscript -e "rmarkdown::render('systemPipeR.Rmd', c('BiocStyle::html_document'), clean=F); knitr::knit('systemPipeR.Rmd', tangle=TRUE)"
 -->
 <script type="text/javascript">
 document.addEventListener("DOMContentLoaded", function() {
@@ -52,8 +77,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <div style="text-align: right">
 
-Source code downloads:    
-\[ [.Rmd](https://raw.githubusercontent.com/tgirke/GEN242//main/content/en/tutorials/systempiper/systemPipeR.Rmd) \]    
+Source code download:    
 \[ [.R](https://raw.githubusercontent.com/tgirke/GEN242//main/content/en/tutorials/systempiper/systemPipeR.R) \]
 
 </div>
@@ -197,7 +221,7 @@ BiocManager::install("systemPipeRdata")
 
 Please note that if you desire to use a third-party command line tool, the
 particular tool and dependencies need to be installed and executable.
-See [details](#tools).
+See [details](#third-party-software-tools).
 
 ### Loading package and documentation
 
@@ -229,7 +253,12 @@ The following generates a fully populated *`systemPipeR`* workflow environment
 the package includes workflow templates for RNA-Seq, ChIP-Seq, VAR-Seq, and Ribo-Seq.
 Templates for additional NGS applications will be provided in the future.
 
-### Directory structure
+``` r
+ssytemPipeRdata::genWorkenvir(workflow = "rnaseq")
+setwd("rnaseq")
+```
+
+### Project structure
 
 The working environment of the sample data loaded in the previous step contains
 the following pre-configured directory structure (Figure 4). Directory names are indicated
@@ -243,7 +272,6 @@ accordingly.
     -   Note, this directory can have any name (*e.g.* <span style="color:green">***rnaseq***</span>, <span style="color:green">***varseq***</span>). Changing its name does not require any modifications in the run script(s).
     -   **Important subdirectories**:
         -   <span style="color:green">***param/***</span>
-            -   Stores non-CWL parameter files such as: *\*.param*, *\*.tmpl* and *\*.run.sh*. These files are only required for backwards compatibility to run old workflows using the previous custom command-line interface.
             -   <span style="color:green">***param/cwl/***</span>: This subdirectory stores all the CWL parameter files. To organize workflows, each can have its own subdirectory, where all `CWL param` and `input.yml` files need to be in the same subdirectory.
         -   <span style="color:green">***data/*** </span>
             -   FASTQ files
@@ -251,11 +279,11 @@ accordingly.
             -   Annotation files
             -   etc.
         -   <span style="color:green">***results/***</span>
-            -   Analysis results are usually written to this directory, including: alignment, variant and peak files (BAM, VCF, BED); tabular result files; and image/plot files
+            -   Analysis results are usually written to this directory, including: alignment, variant and peak files (BAM, VCF, BED); tabular result files; and image/plot files.
             -   Note, the user has the option to organize results files for a given sample and analysis step in a separate subdirectory.
 
 <center>
-<img src="../SYSdir.png">
+<img src="../directory.png">
 </center>
 
 **Figure 5:** *systemPipeR’s* preconfigured directory structure.
@@ -264,10 +292,9 @@ The following parameter files are included in each workflow template:
 
 1.  *`targets.txt`*: initial one provided by user; downstream *`targets_*.txt`* files are generated automatically
 2.  *`*.param/cwl`*: defines parameter for input/output file operations, *e.g.*:
-    -   *`hisat2-se/hisat2-mapping-se.cwl`*
-    -   *`hisat2-se/hisat2-mapping-se.yml`*
-3.  *`*_run.sh`*: optional bash scripts
-4.  Configuration files for computer cluster environments (skip on single machines):
+    -   *`hisat2/hisat2-mapping-se.cwl`*
+    -   *`hisat2/hisat2-mapping-se.yml`*
+3.  Configuration files for computer cluster environments (skip on single machines):
     -   *`.batchtools.conf.R`*: defines the type of scheduler for *`batchtools`* pointing to template file of cluster, and located in user’s home directory
     -   *`*.tmpl`*: specifies parameters of scheduler used by a system, *e.g.* Torque, SGE, Slurm, etc.
 
@@ -284,7 +311,7 @@ column names, while it is four mandatory columns for FASTQ files of PE reads.
 All subsequent columns are optional and any number of additional columns can be
 added as needed. The columns in targets files are expected to be tab separated (TSV format).
 The `SampleName` column contains usually short labels for
-referencing samples (here FASTQ files) accross many workflow steps (*e.g.*
+referencing samples (here FASTQ files) across many workflow steps (*e.g.*
 plots and column titles). Importantly, the labels used in the `SampleName`
 column need to be unique, while technical or biological replicates are
 indicated by duplicated values under the `Factor` column. For readability
@@ -307,19 +334,13 @@ them.
 ``` r
 library(systemPipeR)
 targetspath <- system.file("extdata", "targets.txt", package = "systemPipeR")
-read.delim(targetspath, comment.char = "#")[1:4, ]
+showDF(read.delim(targetspath, comment.char = "#"))
 ```
 
-    ##                      FileName SampleName Factor SampleLong Experiment
-    ## 1 ./data/SRR446027_1.fastq.gz        M1A     M1  Mock.1h.A          1
-    ## 2 ./data/SRR446028_1.fastq.gz        M1B     M1  Mock.1h.B          1
-    ## 3 ./data/SRR446029_1.fastq.gz        A1A     A1   Avr.1h.A          1
-    ## 4 ./data/SRR446030_1.fastq.gz        A1B     A1   Avr.1h.B          1
-    ##          Date
-    ## 1 23-Mar-2012
-    ## 2 23-Mar-2012
-    ## 3 23-Mar-2012
-    ## 4 23-Mar-2012
+    ## Loading required namespace: DT
+
+<div id="htmlwidget-1" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"filter":"none","vertical":false,"extensions":["FixedColumns","Scroller"],"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"],["./data/SRR446027_1.fastq.gz","./data/SRR446028_1.fastq.gz","./data/SRR446029_1.fastq.gz","./data/SRR446030_1.fastq.gz","./data/SRR446031_1.fastq.gz","./data/SRR446032_1.fastq.gz","./data/SRR446033_1.fastq.gz","./data/SRR446034_1.fastq.gz","./data/SRR446035_1.fastq.gz","./data/SRR446036_1.fastq.gz","./data/SRR446037_1.fastq.gz","./data/SRR446038_1.fastq.gz","./data/SRR446039_1.fastq.gz","./data/SRR446040_1.fastq.gz","./data/SRR446041_1.fastq.gz","./data/SRR446042_1.fastq.gz","./data/SRR446043_1.fastq.gz","./data/SRR446044_1.fastq.gz"],["M1A","M1B","A1A","A1B","V1A","V1B","M6A","M6B","A6A","A6B","V6A","V6B","M12A","M12B","A12A","A12B","V12A","V12B"],["M1","M1","A1","A1","V1","V1","M6","M6","A6","A6","V6","V6","M12","M12","A12","A12","V12","V12"],["Mock.1h.A","Mock.1h.B","Avr.1h.A","Avr.1h.B","Vir.1h.A","Vir.1h.B","Mock.6h.A","Mock.6h.B","Avr.6h.A","Avr.6h.B","Vir.6h.A","Vir.6h.B","Mock.12h.A","Mock.12h.B","Avr.12h.A","Avr.12h.B","Vir.12h.A","Vir.12h.B"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],["23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>FileName<\/th>\n      <th>SampleName<\/th>\n      <th>Factor<\/th>\n      <th>SampleLong<\/th>\n      <th>Experiment<\/th>\n      <th>Date<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"fixedColumns":true,"deferRender":true,"scrollY":200,"scroller":true,"columnDefs":[{"className":"dt-right","targets":5},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 
 To work with custom data, users need to generate a *`targets`* file containing
 the paths to their own FASTQ files and then provide under *`targetspath`* the
@@ -333,15 +354,11 @@ with the paths to the PE FASTQ files.
 
 ``` r
 targetspath <- system.file("extdata", "targetsPE.txt", package = "systemPipeR")
-read.delim(targetspath, comment.char = "#")[1:2, 1:6]
+showDF(read.delim(targetspath, comment.char = "#"))
 ```
 
-    ##                     FileName1                   FileName2 SampleName Factor
-    ## 1 ./data/SRR446027_1.fastq.gz ./data/SRR446027_2.fastq.gz        M1A     M1
-    ## 2 ./data/SRR446028_1.fastq.gz ./data/SRR446028_2.fastq.gz        M1B     M1
-    ##   SampleLong Experiment
-    ## 1  Mock.1h.A          1
-    ## 2  Mock.1h.B          1
+<div id="htmlwidget-2" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2">{"x":{"filter":"none","vertical":false,"extensions":["FixedColumns","Scroller"],"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"],["./data/SRR446027_1.fastq.gz","./data/SRR446028_1.fastq.gz","./data/SRR446029_1.fastq.gz","./data/SRR446030_1.fastq.gz","./data/SRR446031_1.fastq.gz","./data/SRR446032_1.fastq.gz","./data/SRR446033_1.fastq.gz","./data/SRR446034_1.fastq.gz","./data/SRR446035_1.fastq.gz","./data/SRR446036_1.fastq.gz","./data/SRR446037_1.fastq.gz","./data/SRR446038_1.fastq.gz","./data/SRR446039_1.fastq.gz","./data/SRR446040_1.fastq.gz","./data/SRR446041_1.fastq.gz","./data/SRR446042_1.fastq.gz","./data/SRR446043_1.fastq.gz","./data/SRR446044_1.fastq.gz"],["./data/SRR446027_2.fastq.gz","./data/SRR446028_2.fastq.gz","./data/SRR446029_2.fastq.gz","./data/SRR446030_2.fastq.gz","./data/SRR446031_2.fastq.gz","./data/SRR446032_2.fastq.gz","./data/SRR446033_2.fastq.gz","./data/SRR446034_2.fastq.gz","./data/SRR446035_2.fastq.gz","./data/SRR446036_2.fastq.gz","./data/SRR446037_2.fastq.gz","./data/SRR446038_2.fastq.gz","./data/SRR446039_2.fastq.gz","./data/SRR446040_2.fastq.gz","./data/SRR446041_2.fastq.gz","./data/SRR446042_2.fastq.gz","./data/SRR446043_2.fastq.gz","./data/SRR446044_2.fastq.gz"],["M1A","M1B","A1A","A1B","V1A","V1B","M6A","M6B","A6A","A6B","V6A","V6B","M12A","M12B","A12A","A12B","V12A","V12B"],["M1","M1","A1","A1","V1","V1","M6","M6","A6","A6","V6","V6","M12","M12","A12","A12","V12","V12"],["Mock.1h.A","Mock.1h.B","Avr.1h.A","Avr.1h.B","Vir.1h.A","Vir.1h.B","Mock.6h.A","Mock.6h.B","Avr.6h.A","Avr.6h.B","Vir.6h.A","Vir.6h.B","Mock.12h.A","Mock.12h.B","Avr.12h.A","Avr.12h.B","Vir.12h.A","Vir.12h.B"],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],["23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012","23-Mar-2012"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>FileName1<\/th>\n      <th>FileName2<\/th>\n      <th>SampleName<\/th>\n      <th>Factor<\/th>\n      <th>SampleLong<\/th>\n      <th>Experiment<\/th>\n      <th>Date<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"fixedColumns":true,"deferRender":true,"scrollY":200,"scroller":true,"columnDefs":[{"className":"dt-right","targets":6},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 
 #### Sample comparisons
 
@@ -359,7 +376,7 @@ readLines(targetspath)[1:4]
 
 The function *`readComp`* imports the comparison information and stores it in a
 *`list`*. Alternatively, *`readComp`* can obtain the comparison information from
-the corresponding *`SYSargs`* object (see below). Note, these header lines are
+the corresponding *`SYSargsList`* object (see below). Note, these header lines are
 optional. They are mainly useful for controlling comparative analyses according
 to certain biological expectations, such as identifying differentially expressed
 genes in RNA-Seq experiments based on simple pair-wise comparisons.
@@ -380,9 +397,9 @@ readComp(file = targetspath, format = "vector", delim = "-")
     ## [29] "A6-A12"  "A6-V12"  "V6-M12"  "V6-A12"  "V6-V12"  "M12-A12" "M12-V12"
     ## [36] "A12-V12"
 
-### Structure and initialization of *`SYSargs2`*
+### Structure and initialization of *`SYSargsList`*
 
-*`SYSargs2`* stores all the information and instructions needed for processing
+*`SYSargsList`* stores all the information and instructions needed for processing
 a set of input files with a single or many command-line steps within a workflow
 (*i.e.* several components of the software or several independent software tools).
 The *`SYSargs2`* object is created and fully populated with the *loadWF*
@@ -401,8 +418,8 @@ functions render the proper command-line strings for each sample and software to
 ``` r
 library(systemPipeR)
 targets <- system.file("extdata", "targets.txt", package = "systemPipeR")
-dir_path <- system.file("extdata/cwl/hisat2/hisat2-se", package = "systemPipeR")
-WF <- loadWF(targets = targets, wf_file = "hisat2-mapping-se.cwl", input_file = "hisat2-mapping-se.yml", 
+dir_path <- system.file("extdata/cwl/hisat2", package = "systemPipeR")
+WF <- loadWF(targets = targets, wf_file = "hisat2-mapping-se.cwl", input_file = "hisat2-mapping-se.yml",
     dir_path = dir_path)
 
 WF <- renderWF(WF, inputvars = c(FileName = "_FASTQ_PATH1_", SampleName = "_SampleName_"))
@@ -414,9 +431,11 @@ Several accessor methods are available that are named after the slot names of th
 names(WF)
 ```
 
-    ##  [1] "targets"       "targetsheader" "modules"       "wf"           
-    ##  [5] "clt"           "yamlinput"     "cmdlist"       "input"        
-    ##  [9] "output"        "cwlfiles"      "inputvars"
+    ##  [1] "targets"           "targetsheader"     "modules"          
+    ##  [4] "wf"                "clt"               "yamlinput"        
+    ##  [7] "cmdlist"           "input"             "output"           
+    ## [10] "files"             "inputvars"         "cmdToCwl"         
+    ## [13] "status"            "internal_outfiles"
 
 Of particular interest is the *`cmdlist()`* method. It constructs the system
 commands for running command-line software as specified by a given *`.cwl`*
@@ -494,19 +513,6 @@ output(WF)[1]
     ## $M1A
     ## $M1A$`hisat2-mapping-se`
     ## [1] "./results/M1A.sam"
-
-``` r
-cwlfiles(WF)
-```
-
-    ## $cwl
-    ## [1] "/home/tgirke/R/x86_64-pc-linux-gnu-library/4.0/systemPipeR/extdata/cwl/hisat2/hisat2-se/hisat2-mapping-se.cwl"
-    ## 
-    ## $yml
-    ## [1] "/home/tgirke/R/x86_64-pc-linux-gnu-library/4.0/systemPipeR/extdata/cwl/hisat2/hisat2-se/hisat2-mapping-se.yml"
-    ## 
-    ## $steps
-    ## [1] "hisat2-mapping-se"
 
 ``` r
 inputvars(WF)
@@ -706,7 +712,7 @@ STAR is an ultrafast universal RNA-seq aligner.
 </tr>
 <tr>
 <td style="text-align:center;">
-<a href="https://github.com/FelixKrueger/TrimGalore">Trim\_galore</a>
+<a href="https://github.com/FelixKrueger/TrimGalore">Trim_galore</a>
 </td>
 <td style="text-align:center;">
 Trim Galore is a wrapper around Cutadapt and FastQC to consistently apply adapter and quality trimming to FastQ files.
@@ -841,9 +847,9 @@ setwd("rnaseq")
 
 To go through this tutorial, you need the following software installed:
 
--   R (version &gt;=3.6.2)
--   systemPipeR package (version &gt;=1.22)
--   Hisat2 (version &gt;= 2.1.0)
+-   R (version >=3.6.2)
+-   systemPipeR package (version >=1.22)
+-   Hisat2 (version >= 2.1.0)
 
 If you desire to build your pipeline with any different software, make sure to
 have the respective software installed and available in your PATH. To make
@@ -876,10 +882,11 @@ sysargslist <- configWF(x = sysargslist, input_steps = "1:3")
 sysargslist <- runWF(sysargslist = sysargslist, steps = "1:2")
 ```
 
-Alternatively, R pipes (*%&gt;%*) are supported to run individual workflow steps.
+Alternatively, R pipes (*%>%*) are supported to run individual workflow steps.
 
 ``` r
-sysargslist <- initWF(script = "systemPipeRNAseq.Rmd", overwrite = TRUE) %>% configWF(input_steps = "1:3") %>% 
+sysargslist <- initWF(script = "systemPipeRNAseq.Rmd", overwrite = TRUE) %>%
+    configWF(input_steps = "1:3") %>%
     runWF(steps = "1:2")
 ```
 
@@ -938,13 +945,13 @@ conf and template files for the Slurm scheduler provided by this package.
 library(batchtools)
 targetspath <- system.file("extdata", "targetsPE.txt", package = "systemPipeR")
 dir_path <- system.file("extdata/cwl/hisat2/hisat2-pe", package = "systemPipeR")
-args <- loadWorkflow(targets = targetspath, wf_file = "hisat2-mapping-pe.cwl", input_file = "hisat2-mapping-pe.yml", 
+args <- loadWorkflow(targets = targetspath, wf_file = "hisat2-mapping-pe.cwl", input_file = "hisat2-mapping-pe.yml",
     dir_path = dir_path)
-args <- renderWF(args, inputvars = c(FileName1 = "_FASTQ_PATH1_", FileName2 = "_FASTQ_PATH2_", 
+args <- renderWF(args, inputvars = c(FileName1 = "_FASTQ_PATH1_", FileName2 = "_FASTQ_PATH2_",
     SampleName = "_SampleName_"))
 resources <- list(walltime = 120, ntasks = 1, ncpus = 4, memory = 1024)
-reg <- clusterRun(args, FUN = runCommandline, more.args = list(args = args, make_bam = TRUE, 
-    dir = FALSE), conffile = ".batchtools.conf.R", template = "batchtools.slurm.tmpl", 
+reg <- clusterRun(args, FUN = runCommandline, more.args = list(args = args, make_bam = TRUE,
+    dir = FALSE), conffile = ".batchtools.conf.R", template = "batchtools.slurm.tmpl",
     Njobs = 18, runid = "01", resourceList = resources)
 getStatus(reg = reg)
 waitForJobs(reg = reg)
@@ -965,22 +972,47 @@ genWorkenvir(workflow = "rnaseq")
 setwd("rnaseq")
 ```
 
-#### Run workflow
+#### Create the workflow
 
-Next, run the chosen sample workflow *`systemPipeRNAseq`* ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/rnaseq/systemPipeRNAseq.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/rnaseq/systemPipeRNAseq.Rmd)) by executing from the command-line *`make -B`* within the *`rnaseq`* directory. Alternatively, one can run the code from the provided *`*.Rmd`* template file from within R interactively.
+This template provides some common steps for a `RNAseq` workflow. One can add, remove, modify
+workflow steps by operating on the `sal` object.
 
-The workflow includes following steps:
+``` r
+sal <- SPRproject()
+sal <- importWF(sal, file_path = "systemPipeRNAseq.Rmd", verbose = FALSE)
+```
+
+**Workflow includes following steps:**
 
 1.  Read preprocessing
     -   Quality filtering (trimming)
     -   FASTQ quality report
-2.  Alignments: *`Tophat2`* (or any other RNA-Seq aligner)
+2.  Alignments: *`HISAT2`* (or any other RNA-Seq aligner)
 3.  Alignment stats
 4.  Read counting
 5.  Sample-wise correlation analysis
 6.  Analysis of differentially expressed genes (DEGs)
 7.  GO term enrichment analysis
 8.  Gene-wise clustering
+
+#### Run workflow
+
+``` r
+sal <- runWF(sal)
+```
+
+Workflow visualization
+
+``` r
+plotWF(sal)
+```
+
+Report generation
+
+``` r
+sal <- renderReport(sal)
+sal <- renderLogs(sal)
+```
 
 ### ChIP-Seq sample
 
@@ -992,11 +1024,7 @@ genWorkenvir(workflow = "chipseq")
 setwd("chipseq")
 ```
 
-#### Run workflow
-
-Next, run the chosen sample workflow *`systemPipeChIPseq_single`* ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/chipseq/systemPipeChIPseq.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/chipseq/systemPipeChIPseq.Rmd)) by executing from the command-line *`make -B`* within the *`chipseq`* directory. Alternatively, one can run the code from the provided *`*.Rmd`* template file from within R interactively.
-
-The workflow includes the following steps:
+**Workflow includes following steps:**
 
 1.  Read preprocessing
     -   Quality filtering (trimming)
@@ -1009,9 +1037,36 @@ The workflow includes the following steps:
 7.  GO term enrichment analysis
 8.  Motif analysis
 
-### VAR-Seq sample
+#### Create the workflow
 
-#### VAR-Seq workflow for the single machine
+This template provides some common steps for a `ChIPseq` workflow. One can add, remove, modify
+workflow steps by operating on the `sal` object.
+
+``` r
+sal <- SPRproject()
+sal <- importWF(sal, file_path = "systemPipeChIPseq.Rmd", verbose = FALSE)
+```
+
+#### Run workflow
+
+``` r
+sal <- runWF(sal)
+```
+
+Workflow visualization
+
+``` r
+plotWF(sal)
+```
+
+Report generation
+
+``` r
+sal <- renderReport(sal)
+sal <- renderLogs(sal)
+```
+
+### VAR-Seq sample
 
 Load the VAR-Seq sample workflow into your current working directory.
 
@@ -1021,11 +1076,7 @@ genWorkenvir(workflow = "varseq")
 setwd("varseq")
 ```
 
-#### Run workflow
-
-Next, run the chosen sample workflow *`systemPipeVARseq_single`* ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/varseq/systemPipeVARseq_single.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/varseq/systemPipeVARseq_single.Rmd)) by executing from the command-line *`make -B`* within the *`varseq`* directory. Alternatively, one can run the code from the provided *`*.Rmd`* template file from within R interactively.
-
-The workflow includes following steps:
+**Workflow includes following steps:**
 
 1.  Read preprocessing
     -   Quality filtering (trimming)
@@ -1037,10 +1088,34 @@ The workflow includes following steps:
 6.  Combine results from many samples
 7.  Summary statistics of samples
 
-#### VAR-Seq workflow for computer cluster
+#### Create the workflow
 
-The workflow template provided for this step is called *`systemPipeVARseq.Rmd`* ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/varseq/systemPipeVARseq.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/varseq/systemPipeVARseq.Rmd)).
-It runs the above VAR-Seq workflow in parallel on multiple compute nodes of an HPC system using Slurm as the scheduler.
+This template provides some common steps for a `VARseq` workflow. One can add, remove, modify
+workflow steps by operating on the `sal` object.
+
+``` r
+sal <- SPRproject()
+sal <- importWF(sal, file_path = "systemPipeVARseq.Rmd", verbose = FALSE)
+```
+
+#### Run workflow
+
+``` r
+sal <- runWF(sal)
+```
+
+Workflow visualization
+
+``` r
+plotWF(sal)
+```
+
+Report generation
+
+``` r
+sal <- renderReport(sal)
+sal <- renderLogs(sal)
+```
 
 ### Ribo-Seq sample
 
@@ -1052,26 +1127,51 @@ genWorkenvir(workflow = "riboseq")
 setwd("riboseq")
 ```
 
-#### Run workflow
-
-Next, run the chosen sample workflow *`systemPipeRIBOseq`* ([PDF](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/riboseq/systemPipeRIBOseq.pdf?raw=true), [Rmd](https://github.com/tgirke/systemPipeRdata/blob/master/inst/extdata/workflows/ribseq/systemPipeRIBOseq.Rmd)) by executing from the command-line *`make -B`* within the *`ribseq`* directory. Alternatively, one can run the code from the provided *`*.Rmd`* template file from within R interactively.
-
-The workflow includes following steps:
+**Workflow includes following steps:**
 
 1.  Read preprocessing
     -   Adaptor trimming and quality filtering
     -   FASTQ quality report
-2.  Alignments: *`Tophat2`* (or any other RNA-Seq aligner)
+2.  Alignments: *`HISAT2`* (or any other RNA-Seq aligner)
 3.  Alignment stats
 4.  Compute read distribution across genomic features
-5.  Adding custom features to the workflow (e.g. uORFs)
-6.  Genomic read coverage along with transcripts
+5.  Adding custom features to workflow (e.g. uORFs)
+6.  Genomic read coverage along transcripts
 7.  Read counting
 8.  Sample-wise correlation analysis
 9.  Analysis of differentially expressed genes (DEGs)
 10. GO term enrichment analysis
 11. Gene-wise clustering
 12. Differential ribosome binding (translational efficiency)
+
+#### Create the workflow
+
+This template provides some common steps for a `RIBOseq` workflow. One can add, remove, modify
+workflow steps by operating on the `sal` object.
+
+``` r
+sal <- SPRproject()
+sal <- importWF(sal, file_path = "systemPipeRIBOseq.Rmd", verbose = FALSE)
+```
+
+#### Run workflow
+
+``` r
+sal <- runWF(sal)
+```
+
+Workflow visualization
+
+``` r
+plotWF(sal, rstudio = TRUE)
+```
+
+Report generation
+
+``` r
+sal <- renderReport(sal)
+sal <- renderLogs(sal)
+```
 
 ## Version information
 
@@ -1081,13 +1181,13 @@ The workflow includes following steps:
 sessionInfo()
 ```
 
-    ## R version 4.0.5 (2021-03-31)
+    ## R Under development (unstable) (2021-10-25 r81105)
     ## Platform: x86_64-pc-linux-gnu (64-bit)
-    ## Running under: Debian GNU/Linux 10 (buster)
+    ## Running under: Ubuntu 20.04.4 LTS
     ## 
     ## Matrix products: default
-    ## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.8.0
-    ## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.8.0
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
+    ## LAPACK: /home/dcassol/src/R-devel/lib/libRlapack.so
     ## 
     ## locale:
     ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -1098,61 +1198,47 @@ sessionInfo()
     ## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
     ## 
     ## attached base packages:
-    ## [1] stats4    parallel  stats     graphics  grDevices utils     datasets 
-    ## [8] methods   base     
+    ## [1] stats4    stats     graphics  grDevices utils     datasets  methods  
+    ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] magrittr_2.0.1              batchtools_0.9.14          
-    ##  [3] ape_5.4-1                   ggplot2_3.3.2              
-    ##  [5] systemPipeR_1.24.5          ShortRead_1.48.0           
-    ##  [7] GenomicAlignments_1.26.0    SummarizedExperiment_1.20.0
-    ##  [9] Biobase_2.50.0              MatrixGenerics_1.2.0       
-    ## [11] matrixStats_0.57.0          BiocParallel_1.24.1        
-    ## [13] Rsamtools_2.6.0             Biostrings_2.58.0          
-    ## [15] XVector_0.30.0              GenomicRanges_1.42.0       
-    ## [17] GenomeInfoDb_1.26.1         IRanges_2.24.0             
-    ## [19] S4Vectors_0.28.0            BiocGenerics_0.36.0        
-    ## [21] BiocStyle_2.18.0           
+    ##  [1] magrittr_2.0.3              batchtools_0.9.15          
+    ##  [3] ape_5.6-2                   ggplot2_3.3.5              
+    ##  [5] systemPipeR_2.1.27          ShortRead_1.53.1           
+    ##  [7] GenomicAlignments_1.31.2    SummarizedExperiment_1.25.3
+    ##  [9] Biobase_2.55.2              MatrixGenerics_1.7.0       
+    ## [11] matrixStats_0.62.0          BiocParallel_1.29.21       
+    ## [13] Rsamtools_2.11.0            Biostrings_2.63.3          
+    ## [15] XVector_0.35.0              GenomicRanges_1.47.6       
+    ## [17] GenomeInfoDb_1.31.7         IRanges_2.29.1             
+    ## [19] S4Vectors_0.33.17           BiocGenerics_0.41.2        
+    ## [21] BiocStyle_2.23.1           
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] colorspace_2.0-0         rjson_0.2.20             hwriter_1.3.2           
-    ##   [4] ellipsis_0.3.1           rstudioapi_0.13          bit64_4.0.5             
-    ##   [7] AnnotationDbi_1.52.0     xml2_1.3.2               codetools_0.2-18        
-    ##  [10] splines_4.0.5            knitr_1.30               jsonlite_1.7.1          
-    ##  [13] annotate_1.68.0          GO.db_3.12.1             dbplyr_2.0.0            
-    ##  [16] png_0.1-7                pheatmap_1.0.12          graph_1.68.0            
-    ##  [19] BiocManager_1.30.10      compiler_4.0.5           httr_1.4.2              
-    ##  [22] backports_1.2.0          GOstats_2.56.0           assertthat_0.2.1        
-    ##  [25] Matrix_1.3-2             limma_3.46.0             formatR_1.7             
-    ##  [28] htmltools_0.5.1.1        prettyunits_1.1.1        tools_4.0.5             
-    ##  [31] gtable_0.3.0             glue_1.4.2               GenomeInfoDbData_1.2.4  
-    ##  [34] Category_2.56.0          dplyr_1.0.2              rsvg_2.1                
-    ##  [37] rappdirs_0.3.1           V8_3.4.0                 Rcpp_1.0.5              
-    ##  [40] jquerylib_0.1.3          vctrs_0.3.5              svglite_2.0.0           
-    ##  [43] nlme_3.1-149             blogdown_1.2             rtracklayer_1.50.0      
-    ##  [46] xfun_0.22                stringr_1.4.0            rvest_0.3.6             
-    ##  [49] lifecycle_0.2.0          XML_3.99-0.5             edgeR_3.32.0            
-    ##  [52] zlibbioc_1.36.0          scales_1.1.1             BSgenome_1.58.0         
-    ##  [55] VariantAnnotation_1.36.0 hms_0.5.3                RBGL_1.66.0             
-    ##  [58] RColorBrewer_1.1-2       yaml_2.2.1               curl_4.3                
-    ##  [61] memoise_1.1.0            sass_0.3.1               biomaRt_2.46.0          
-    ##  [64] latticeExtra_0.6-29      stringi_1.5.3            RSQLite_2.2.1           
-    ##  [67] genefilter_1.72.0        checkmate_2.0.0          GenomicFeatures_1.42.1  
-    ##  [70] DOT_0.1                  systemfonts_1.0.1        rlang_0.4.8             
-    ##  [73] pkgconfig_2.0.3          bitops_1.0-6             evaluate_0.14           
-    ##  [76] lattice_0.20-41          purrr_0.3.4              bit_4.0.4               
-    ##  [79] tidyselect_1.1.0         GSEABase_1.52.0          AnnotationForge_1.32.0  
-    ##  [82] bookdown_0.21            R6_2.5.0                 generics_0.1.0          
-    ##  [85] base64url_1.4            DelayedArray_0.16.0      DBI_1.1.0               
-    ##  [88] withr_2.3.0              pillar_1.4.7             survival_3.2-10         
-    ##  [91] RCurl_1.98-1.2           tibble_3.0.4             crayon_1.3.4            
-    ##  [94] BiocFileCache_1.14.0     rmarkdown_2.7            jpeg_0.1-8.1            
-    ##  [97] progress_1.2.2           locfit_1.5-9.4           grid_4.0.5              
-    ## [100] data.table_1.13.2        blob_1.2.1               Rgraphviz_2.34.0        
-    ## [103] webshot_0.5.2            digest_0.6.27            xtable_1.8-4            
-    ## [106] brew_1.0-6               openssl_1.4.3            munsell_0.5.0           
-    ## [109] viridisLite_0.3.0        kableExtra_1.3.4         bslib_0.2.4             
-    ## [112] askpass_1.1
+    ##  [1] nlme_3.1-157           bitops_1.0-7           RColorBrewer_1.1-3    
+    ##  [4] progress_1.2.2         tools_4.2.0            backports_1.4.1       
+    ##  [7] bslib_0.3.1            utf8_1.2.2             R6_2.5.1              
+    ## [10] DBI_1.1.2              colorspace_2.0-3       withr_2.5.0           
+    ## [13] prettyunits_1.1.1      tidyselect_1.1.2       compiler_4.2.0        
+    ## [16] cli_3.2.0              formatR_1.12           DelayedArray_0.21.2   
+    ## [19] bookdown_0.26          sass_0.4.1             scales_1.2.0          
+    ## [22] checkmate_2.1.0        rappdirs_0.3.3         stringr_1.4.0         
+    ## [25] digest_0.6.29          rmarkdown_2.13         jpeg_0.1-9            
+    ## [28] pkgconfig_2.0.3        htmltools_0.5.2        fastmap_1.1.0         
+    ## [31] htmlwidgets_1.5.4      rlang_1.0.2            rstudioapi_0.13       
+    ## [34] jquerylib_0.1.4        generics_0.1.2         hwriter_1.3.2.1       
+    ## [37] jsonlite_1.8.0         dplyr_1.0.8            RCurl_1.98-1.6        
+    ## [40] GenomeInfoDbData_1.2.8 Matrix_1.4-1           Rcpp_1.0.8.3          
+    ## [43] munsell_0.5.0          fansi_1.0.3            lifecycle_1.0.1       
+    ## [46] stringi_1.7.6          yaml_2.3.5             zlibbioc_1.41.0       
+    ## [49] grid_4.2.0             parallel_4.2.0         crayon_1.5.1          
+    ## [52] lattice_0.20-45        hms_1.1.1              knitr_1.38            
+    ## [55] pillar_1.7.0           base64url_1.4          codetools_0.2-18      
+    ## [58] glue_1.6.2             evaluate_0.15          blogdown_1.9          
+    ## [61] latticeExtra_0.6-29    data.table_1.14.2      BiocManager_1.30.16   
+    ## [64] png_0.1-7              vctrs_0.4.1            gtable_0.3.0          
+    ## [67] purrr_0.3.4            assertthat_0.2.1       xfun_0.30             
+    ## [70] tibble_3.1.6           ellipsis_0.3.2         brew_1.0-7
 
 ## Funding
 
