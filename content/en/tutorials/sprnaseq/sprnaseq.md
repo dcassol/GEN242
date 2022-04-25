@@ -1,7 +1,7 @@
 ---
 title: "RNA-Seq Workflow Template" 
 author: "Author: First Last"
-date: "Last update: 24 April, 2022" 
+date: "Last update: 25 April, 2022" 
 output:
   BiocStyle::html_document:
     toc_float: true
@@ -874,7 +874,7 @@ sal
 statusWF(sal)
 ```
 
-## Accessing logs report
+## Technical report
 
 *`systemPipeR`* compiles all the workflow execution logs in one central location,
 making it easier to check any standard output (`stdout`) or standard error
@@ -882,6 +882,14 @@ making it easier to check any standard output (`stdout`) or standard error
 
 ``` r
 sal <- renderLogs(sal)
+```
+
+## Scientific report
+
+*`systemPipeR`* auto-generates scientific analysis reports in HTML format.
+
+``` r
+sal <- renderReport(sal)
 ```
 
 ## Funding
