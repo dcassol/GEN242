@@ -38,7 +38,7 @@ summarizeOverlaps(eByg, bfl, mode="Union",
                     ignore.strand=TRUE, 
                     # preprocess.reads=invertStrand,
                     inter.feature=FALSE, 
-                    singleEnd=TRUE)
+                    singleEnd=FALSE)
 ```
 
 Before attempting to solve this homework task please read the vignette
@@ -51,7 +51,7 @@ function. In addition, the help file for `?summarizeOverlaps` provides useful in
 
 - __Task 3__: Explain the utility (biological relevance) of the different strand counting modes used under Task 1. Include your explanation as comment text in your homework script (see `HW7.R` below). 
 
-Note, for Tasks 1-3 only the code and/or text needs to be included in the homework submission (no data/result files). For details see below.
+Note, for Tasks 1-3 only the code and/or text needs to be included in the homework submission (no data/result files). 
 
 ## B. Read counting for different feature types
 - __Task 4__: Compute strand-specific count tables for the positive (sense) strand of the following feature types. The help files of `?exonsBy` and `?transcripts` provide useful information for solving these tasks. 
@@ -74,7 +74,7 @@ Compare the DEG result of the two methods in two separate 4-way Venn diagrams fo
    1. 4-way Venn diagram for unstranded count table
    2. 4-way Venn diagram for sense strand count table
 
-Note, for Tasks 5 include both the code and the resulting images in your homework submission. For deteails see below.
+Note, for Tasks 5 include both the code and the resulting images in your homework submission. 
 
 ## Homework submission
 

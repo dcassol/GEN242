@@ -186,6 +186,14 @@ sal <- SPRproject()
 sal
 ```
 
+In case one wishes to run the entire workflow immediately, one can run it as follows:
+
+```{r run_workflow2, message=FALSE, eval=FALSE}
+sal <- importWF(sal, file_path = "systemPipeRNAseq.Rmd") # Populates SYSargsList object with run instructions for all steps
+sal <- runWF(sal) # Runs workflow. This may take some time.
+sal <- renderReport(sal) # Renders report
+```
+
 ### Required packages and resources
 
 The `systemPipeR` package needs to be loaded [@H_Backman2016-bt].
