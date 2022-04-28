@@ -271,7 +271,7 @@ appendStep(sal) <- LineWise(
     dependency = "preprocessing")
 ``` 
 
-![](./results/fastqReport.png)
+![](../results/fastqReport.png)
 <div align="center">Figure 1: FASTQ quality report for 7 samples.</div></br>
 
 ### Alignments
@@ -656,7 +656,7 @@ appendStep(sal) <- LineWise(
 )
 ```
 
-![](./results/seqlogo.png)
+![](../results/seqlogo.png)
 <div align="center">Figure 2: One of the motifs identified by `BCRANK`</div></br>
 
 ### Version Information
