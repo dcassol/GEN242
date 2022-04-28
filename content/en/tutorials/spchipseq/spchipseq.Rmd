@@ -185,6 +185,14 @@ sal <- SPRproject()
 sal
 ```
 
+As an alternative, `importWF` function can be used to build the workflow instances 
+with one command, as follows:
+
+```{r importWF, message=FALSE, eval=FALSE}
+sal <- importWF(sal, file_path = "systemPipeChIPseq.Rmd") ## Import all the Workflow steps
+sal <- runWF(sal) # Runs workflow 
+```
+
 ### Required packages and resources
 
 The `systemPipeR` package needs to be loaded [@H_Backman2016-bt].
@@ -263,7 +271,7 @@ appendStep(sal) <- LineWise(
     dependency = "preprocessing")
 ``` 
 
-![](../results/fastqReport.png)
+![](./results/fastqReport.png)
 <div align="center">Figure 1: FASTQ quality report for 7 samples.</div></br>
 
 ### Alignments
@@ -648,7 +656,7 @@ appendStep(sal) <- LineWise(
 )
 ```
 
-![](../results/seqlogo.png)
+![](./results/seqlogo.png)
 <div align="center">Figure 2: One of the motifs identified by `BCRANK`</div></br>
 
 ### Version Information
